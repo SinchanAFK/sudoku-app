@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sudoku Solver</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Share+Tech+Mono&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Share Tech Mono', monospace;
+      background: #0a0a1a;
+      color: #e0e0ff;
+      min-height: 100vh;
+      background-image:
+        linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    header {
+      background: rgba(10,10,30,0.95);
+      border-bottom: 1px solid rgba(0,255,255,0.3);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: #00ffff;
+      text-shadow: 0 0 20px rgba(0,255,255,0.8), 0 0 40px rgba(0,255,255,0.4);
+      letter-spacing: 2px;
+    }
+
+    header span {
+      font-size: 11px;
+      color: rgba(0,255,255,0.5);
+      letter-spacing: 1px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(0,255,255,0.2);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,255,255,0.6), transparent);
+    }
+
+    .card h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #00ffff;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    /* Grid */
+    table { border-collapse: collapse; margin: 12px auto; display: block; width: fit-content; }
+    td { width: 54px; height: 54px; text-align: center; }
+
+    td input {
+      width: 100%; height: 100%;
+      border: 1px solid rgba(0,255,255,0.15);
+      text-align: center;
+      font-size: 22px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 600;
+      color: rgba(0,255,255,0.4);
+      background: rgba(0,255,255,0.02);
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    td input:focus {
+      background: rgba(0,255,255,0.08);
+      border-color: rgba(0,255,255,0.6);
+      color: #00ffff;
+      box-shadow: inset 0 0 12px rgba(0,255,255,0.1);
+    }
+
+    td input.given {
+      color: #ffffff;
+      background: rgba(0,255,255,0.06);
+      font-weight: 800;
+    }
+
+    td input.solved {
+      color: #00ff88;
+      background: rgba(0,255,136,0.06);
+      animation: popIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+
+    td input.highlight {
+      background: rgba(255,255,0,0.12) !important;
+      color: #ffff00 !important;
+      box-shadow: inset 0 0 16px rgba(255,255,0,0.2) !important;
+    }
+
+    td input.backtrack {
+      background: rgba(255,50,50,0.12) !important;
+      color: #ff4444 !important;
+      animation: pulse 0.3s ease;
+    }
+
+    td:nth-child(3n) input { border-right: 2px solid rgba(0,255,255,0.5); }
+    td:nth-child(3n+1) input { border-left: 2px solid rgba(0,255,255,0.5); }
+    tr:nth-child(3n) td input { border-bottom: 2px solid rgba(0,255,255,0.5); }
+    tr:nth-child(3n+1) td input { border-top: 2px solid rgba(0,255,255,0.5); }
+
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 5px rgba(0,255,255,0.3); }
+      50% { box-shadow: 0 0 20px rgba(0,255,255,0.8), 0 0 40px rgba(0,255,255,0.4); }
+    }
+
+    /* Buttons */
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+
+    button {
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,255,255,0.3);
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 600;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+
+    .btn-primary {
+      background: rgba(0,255,255,0.1);
+      color: #00ffff;
+      border-color: rgba(0,255,255,0.5);
+    }
+    .btn-primary:hover {
+      background: rgba(0,255,255,0.2);
+      box-shadow: 0 0 20px rgba(0,255,255,0.4);
+    }
+
+    .btn-success {
+      background: rgba(0,255,136,0.1);
+      color: #00ff88;
+      border-color: rgba(0,255,136,0.5);
+    }
+    .btn-success:hover {
+      background: rgba(0,255,136,0.2);
+      box-shadow: 0 0 20px rgba(0,255,136,0.4);
+    }
+
+    .btn-danger {
+      background: rgba(255,50,50,0.1);
+      color: #ff4444;
+      border-color: rgba(255,50,50,0.4);
+    }
+    .btn-danger:hover {
+      background: rgba(255,50,50,0.2);
+      box-shadow: 0 0 20px rgba(255,50,50,0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: rgba(0,255,255,0.6);
+      border-color: rgba(0,255,255,0.2);
+    }
+    .btn-outline:hover { border-color: rgba(0,255,255,0.5); color: #00ffff; }
+
+    /* Status */
+    .status {
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin: 8px 0;
+      letter-spacing: 0.5px;
+    }
+    .status.success { background: rgba(0,255,136,0.08); color: #00ff88; border: 1px solid rgba(0,255,136,0.3); }
+    .status.error   { background: rgba(255,50,50,0.08);  color: #ff4444; border: 1px solid rgba(255,50,50,0.3); }
+    .status.info    { background: rgba(0,255,255,0.06);  color: #00ffff; border: 1px solid rgba(0,255,255,0.2); }
+
+    /* Progress bar */
+    #progress-wrap {
+      height: 4px;
+      background: rgba(0,255,255,0.1);
+      border-radius: 2px;
+      margin: 10px 0;
+      overflow: hidden;
+      display: none;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00ffff, #00ff88);
+      transition: width 0.1s;
+      box-shadow: 0 0 10px rgba(0,255,255,0.8);
+    }
+
+    /* Viz log */
+    #viz-log {
+      height: 160px;
+      overflow-y: auto;
+      font-size: 11px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 6px;
+      padding: 10px;
+      border: 1px solid rgba(0,255,255,0.1);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0,255,255,0.3) transparent;
+    }
+    .log-place    { color: #00ff88; }
+    .log-backtrack{ color: #ff4444; }
+
+    #viz-controls { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    #viz-controls input[type=range] {
+      flex: 1;
+      accent-color: #00ffff;
+    }
+
+    /* Stats */
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0,255,255,0.08);
+      font-size: 12px;
+      color: rgba(0,255,255,0.5);
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 600;
+      color: #00ffff;
+      font-size: 13px;
+    }
+
+    /* Difficulty badge */
+    .difficulty-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-top: 8px;
+    }
+    .diff-easy   { background: rgba(0,255,136,0.15); color: #00ff88; border: 1px solid rgba(0,255,136,0.4); }
+    .diff-medium { background: rgba(255,200,0,0.15); color: #ffc800; border: 1px solid rgba(255,200,0,0.4); }
+    .diff-hard   { background: rgba(255,50,50,0.15); color: #ff4444; border: 1px solid rgba(255,50,50,0.4); }
+
+    /* Algorithm comparison */
+    .compare-bar-wrap { margin: 8px 0; }
+    .compare-label { font-size: 11px; color: rgba(0,255,255,0.6); margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .compare-bar-bg { height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+    .compare-bar { height: 100%; border-radius: 4px; transition: width 1s ease; width: 0%; }
+    .bar-mrv  { background: linear-gradient(90deg, #00ffff, #00ff88); box-shadow: 0 0 8px rgba(0,255,255,0.6); }
+    .bar-plain{ background: linear-gradient(90deg, #ff4444, #ff8800); box-shadow: 0 0 8px rgba(255,100,0,0.6); }
+
+    /* Upload */
+    .upload-zone {
+      border: 2px dashed rgba(0,255,255,0.2);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .upload-zone:hover {
+      border-color: rgba(0,255,255,0.5);
+      background: rgba(0,255,255,0.03);
+    }
+    .upload-zone p { color: rgba(0,255,255,0.4); font-size: 12px; margin-top: 6px; }
+
+    #puzzle-list { list-style: none; max-height: 100px; overflow-y: auto; margin-top: 8px; }
+    #puzzle-list li {
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      color: rgba(0,255,255,0.5);
+      transition: all 0.15s;
+    }
+    #puzzle-list li:hover { background: rgba(0,255,255,0.08); color: #00ffff; }
+    #puzzle-list li.active { background: rgba(0,255,255,0.12); color: #00ffff; }
+
+    select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,255,255,0.3);
+      font-size: 12px;
+      font-family: 'Share Tech Mono', monospace;
+      background: rgba(0,255,255,0.05);
+      color: #00ffff;
+    }
+
+    /* Confetti canvas */
+    #confetti-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* Solved overlay */
+    #solved-banner {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10,10,30,0.95);
+      border: 1px solid rgba(0,255,255,0.5);
+      border-radius: 16px;
+      padding: 32px 48px;
+      text-align: center;
+      z-index: 1000;
+      animation: popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+      box-shadow: 0 0 60px rgba(0,255,255,0.3);
+    }
+    #solved-banner h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 28px;
+      color: #00ffff;
+      text-shadow: 0 0 30px rgba(0,255,255,1);
+      margin-bottom: 8px;
+    }
+    #solved-banner p { color: rgba(0,255,255,0.6); font-size: 13px; }
+    /* Light mode */
+    body.light {
+      background: #f0f4f8;
+      background-image: none;
+      color: #1a202c;
+    }
+    body.light header {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    body.light header h1 {
+      color: #2b6cb0;
+      text-shadow: none;
+    }
+    body.light header span { color: #718096; }
+    body.light #theme-btn {
+      background: #ebf8ff;
+      color: #2b6cb0;
+      border-color: #bee3f8;
+    }
+    body.light .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    body.light .card::before { display: none; }
+    body.light .card h2 { color: #2b6cb0; }
+    body.light td input {
+      border-color: #cbd5e0;
+      color: #4a5568;
+      background: white;
+    }
+    body.light td input:focus { background: #ebf8ff; border-color: #4299e1; color: #2b6cb0; box-shadow: none; }
+    body.light td input.given { color: #1a202c; background: #f7fafc; }
+    body.light td input.solved { color: #276749; background: #f0fff4; }
+    body.light td input.highlight { background: #fefcbf !important; color: #744210 !important; box-shadow: none !important; }
+    body.light td input.backtrack { background: #fff5f5 !important; color: #c53030 !important; }
+    body.light td:nth-child(3n) input { border-right: 2px solid #2d3748; }
+    body.light td:nth-child(3n+1) input { border-left: 2px solid #2d3748; }
+    body.light tr:nth-child(3n) td input { border-bottom: 2px solid #2d3748; }
+    body.light tr:nth-child(3n+1) td input { border-top: 2px solid #2d3748; }
+    body.light button { border-color: #cbd5e0; }
+    body.light .btn-primary { background: #4299e1; color: white; border-color: #4299e1; box-shadow: none; }
+    body.light .btn-primary:hover { background: #3182ce; box-shadow: none; }
+    body.light .btn-success { background: #48bb78; color: white; border-color: #48bb78; box-shadow: none; }
+    body.light .btn-success:hover { background: #38a169; box-shadow: none; }
+    body.light .btn-danger  { background: #fc8181; color: white; border-color: #fc8181; box-shadow: none; }
+    body.light .btn-outline { background: white; color: #4a5568; border-color: #cbd5e0; }
+    body.light .btn-outline:hover { background: #f7fafc; box-shadow: none; }
+    body.light .status.success { background: #f0fff4; color: #276749; border-color: #9ae6b4; }
+    body.light .status.error   { background: #fff5f5; color: #c53030; border-color: #feb2b2; }
+    body.light .status.info    { background: #ebf8ff; color: #2b6cb0; border-color: #bee3f8; }
+    body.light .stat-row { border-color: #f0f0f0; color: #4a5568; }
+    body.light .stat-val { color: #4299e1; }
+    body.light #viz-log { background: #f7fafc; border-color: #e2e8f0; }
+    body.light .log-place    { color: #276749; }
+    body.light .log-backtrack{ color: #c53030; }
+    body.light #viz-step-label { color: #718096; }
+    body.light .compare-bar-bg { background: #e2e8f0; }
+    body.light .compare-label { color: #4a5568; }
+    body.light #compare-verdict { color: #718096; }
+    body.light .upload-zone { border-color: #cbd5e0; }
+    body.light .upload-zone:hover { border-color: #4299e1; background: #ebf8ff; }
+    body.light .upload-zone p { color: #718096; }
+    body.light #puzzle-list li { color: #4a5568; }
+    body.light #puzzle-list li:hover { background: #ebf8ff; color: #2b6cb0; }
+    body.light #puzzle-list li.active { background: #bee3f8; color: #2b6cb0; }
+    body.light select { background: white; color: #2d3748; border-color: #cbd5e0; }
+    body.light #solved-banner { background: #ffffff; border-color: #bee3f8; box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
+    body.light #solved-banner h2 { color: #2b6cb0; text-shadow: none; }
+    body.light #solved-banner p { color: #718096; }
+    body.light #progress-bar { box-shadow: none; }
+  </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div id="solved-banner">
+  <h2>PUZZLE SOLVED</h2>
+  <p id="solved-stats"></p>
+  <button class="btn-primary" onclick="closeBanner()" style="margin-top:16px">CONTINUE</button>
+</div>
+
+<header>
+  <h1>⬡ SUDOKU.EXE</h1>
+  <span>BACKTRACKING + MRV HEURISTIC · DESIGN & ANALYSIS OF ALGORITHMS</span>
+  <button id="theme-btn" onclick="toggleTheme()" style="margin-left:auto;padding:8px 16px;border-radius:6px;border:1px solid rgba(0,255,255,0.3);background:rgba(0,255,255,0.1);color:#00ffff;font-family:'Orbitron',sans-serif;font-size:11px;cursor:pointer;letter-spacing:1px;">☀ LIGHT MODE</button>
+</header>
+
+<div class="container">
+  <!-- LEFT -->
+  <div>
+    <div class="card">
+      <h2>// Puzzle Grid</h2>
+      <div id="status-bar"></div>
+      <div id="progress-wrap"><div id="progress-bar"></div></div>
+      <table id="sudoku-table"></table>
+      <div class="btn-row">
+        <button class="btn-primary"  onclick="solvePuzzle()">▶ SOLVE</button>
+        <button class="btn-outline"  onclick="visualizeSolve()">◈ VISUALIZE</button>
+        <button class="btn-danger"   onclick="clearBoard()">✕ CLEAR</button>
+      </div>
+    </div>
+
+    <!-- Visualization -->
+    <div class="card" style="margin-top:16px">
+      <h2>// Algorithm Trace</h2>
+      <div id="viz-log"><p style="color:rgba(0,255,255,0.2)">_ solve a puzzle to see the trace</p></div>
+      <div id="viz-controls">
+        <button class="btn-outline" onclick="vizPrev()" style="padding:6px 12px">‹</button>
+        <input type="range" id="viz-slider" min="0" value="0" oninput="vizGoto(this.value)">
+        <button class="btn-outline" onclick="vizNext()" style="padding:6px 12px">›</button>
+        <button class="btn-primary" id="play-btn" onclick="togglePlay()" style="padding:6px 14px">▶</button>
+      </div>
+      <div id="viz-step-label" style="font-size:11px;color:rgba(0,255,255,0.3);margin-top:8px">NO STEPS LOADED</div>
+    </div>
+
+    <!-- Algorithm Comparison -->
+    <div class="card" style="margin-top:16px">
+      <h2>// Algorithm Comparison</h2>
+      <p style="font-size:11px;color:rgba(0,255,255,0.4);margin-bottom:12px">Solve a puzzle to compare Backtracking vs Backtracking+MRV</p>
+      <div class="compare-bar-wrap">
+        <div class="compare-label"><span>MRV (smart)</span><span id="mrv-count">—</span></div>
+        <div class="compare-bar-bg"><div class="compare-bar bar-mrv" id="bar-mrv"></div></div>
+      </div>
+      <div class="compare-bar-wrap" style="margin-top:12px">
+        <div class="compare-label"><span>Plain backtracking</span><span id="plain-count">—</span></div>
+        <div class="compare-bar-bg"><div class="compare-bar bar-plain" id="bar-plain"></div></div>
+      </div>
+      <p id="compare-verdict" style="font-size:11px;color:rgba(0,255,255,0.4);margin-top:12px"></p>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div>
+    <!-- Generate -->
+    <div class="card">
+      <h2>// Generate</h2>
+      <div class="btn-row">
+        <select id="difficulty">
+          <option value="easy">EASY</option>
+          <option value="medium" selected>MEDIUM</option>
+          <option value="hard">HARD</option>
+        </select>
+        <button class="btn-success" onclick="generatePuzzle()">GENERATE</button>
+      </div>
+    </div>
+
+    <!-- Upload -->
+    <div class="card" style="margin-top:16px">
+      <h2>// Upload Dataset</h2>
+      <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+        <div style="font-size:32px">⬆</div>
+        <p>Click to upload .txt puzzle file</p>
+        <p style="font-size:10px">Format: 9 digits per row, 0 = empty cell</p>
+      </div>
+      <input type="file" id="file-input" accept=".txt" style="display:none" onchange="uploadFile(this)">
+      <ul id="puzzle-list"></ul>
+    </div>
+
+    <!-- Stats -->
+    <div class="card" style="margin-top:16px">
+      <h2>// Analysis</h2>
+      <div class="stat-row"><span>Algorithm</span><span class="stat-val">MRV+BT</span></div>
+      <div class="stat-row"><span>Steps</span><span class="stat-val" id="stat-steps">—</span></div>
+      <div class="stat-row"><span>Backtracks</span><span class="stat-val" id="stat-bt">—</span></div>
+      <div class="stat-row"><span>Placements</span><span class="stat-val" id="stat-place">—</span></div>
+      <div class="stat-row"><span>Time (ms)</span><span class="stat-val" id="stat-time">—</span></div>
+      <div class="stat-row"><span>Difficulty</span><span id="stat-diff">—</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentBoard = Array.from({length:9}, () => Array(9).fill(0));
+let originalBoard = Array.from({length:9}, () => Array(9).fill(0));
+let vizSteps = [];
+let vizIndex = 0;
+let playInterval = null;
+let uploadedPuzzles = [];
+
+// ── Grid ──
+function buildGrid(board) {
+  originalBoard = board.map(r => [...r]);
+  currentBoard  = board.map(r => [...r]);
+  const tbl = document.getElementById('sudoku-table');
+  tbl.innerHTML = '';
+  for (let r = 0; r < 9; r++) {
+    const tr = document.createElement('tr');
+    for (let c = 0; c < 9; c++) {
+      const td = document.createElement('td');
+      const inp = document.createElement('input');
+      inp.maxLength = 1;
+      inp.dataset.r = r; inp.dataset.c = c;
+      const val = board[r][c];
+      if (val) {
+        inp.value = val;
+        inp.className = 'given';
+        inp.readOnly = true;
+      } else {
+        inp.oninput = e => {
+          const v = parseInt(e.target.value);
+          currentBoard[r][c] = (v >= 1 && v <= 9) ? v : 0;
+          if (!v || v < 1 || v > 9) e.target.value = '';
+        };
+      }
+      td.appendChild(inp); tr.appendChild(td);
+    }
+    tbl.appendChild(tr);
+  }
+}
+
+function getCell(r, c) {
+  return document.querySelector(`input[data-r="${r}"][data-c="${c}"]`);
+}
+
+function getBoardFromGrid() {
+  const board = Array.from({length:9}, () => Array(9).fill(0));
+  document.querySelectorAll('#sudoku-table input').forEach(inp => {
+    board[+inp.dataset.r][+inp.dataset.c] = parseInt(inp.value) || 0;
+  });
+  return board;
+}
+
+function setStatus(msg, type='info') {
+  document.getElementById('status-bar').innerHTML = `<div class="status ${type}">${msg}</div>`;
+}
+
+async function solvePuzzle() {
+  const board = getBoardFromGrid();
+  setStatus('SOLVING...', 'info');
+  showProgress(true);
+
+  const t0 = performance.now();
+  const res = await fetch('/solve', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({board})
+  });
+  const data = await res.json();
+  const elapsed = (performance.now() - t0).toFixed(1);
+  showProgress(false);
+
+  if (data.error) { setStatus(data.error, 'error'); return; }
+
+  vizSteps = data.steps;
+  vizIndex  = 0;
+  document.getElementById('viz-slider').max = data.steps.length - 1;
+
+  const placements = data.steps.filter(s => s.action === 'place').length;
+  const backtracks  = data.steps.filter(s => s.action === 'backtrack').length;
+  const difficulty  = analyzeDifficulty(backtracks, data.step_count);
+
+  document.getElementById('stat-steps').textContent  = data.step_count;
+  document.getElementById('stat-bt').textContent     = backtracks;
+  document.getElementById('stat-place').textContent  = placements;
+  document.getElementById('stat-time').textContent   = elapsed;
+  document.getElementById('stat-diff').innerHTML     =
+    `<span class="difficulty-badge diff-${difficulty}">${difficulty.toUpperCase()}</span>`;
+
+  renderSolution(data.solution);
+  loadVizLog(data.steps);
+  updateComparison(board, data.steps.length);
+  setStatus(`✓ SOLVED IN ${elapsed}ms · ${data.step_count} STEPS · ${backtracks} BACKTRACKS`, 'success');
+
+  setTimeout(() => showSolvedBanner(elapsed, data.step_count, backtracks, difficulty), 400);
+  launchConfetti();
+}
+
+function renderSolution(board) {
+  for (let r = 0; r < 9; r++)
+    for (let c = 0; c < 9; c++) {
+      const inp = getCell(r, c);
+      if (inp && !inp.readOnly) {
+        inp.value = board[r][c] || '';
+        if (board[r][c]) inp.classList.add('solved');
+      }
+    }
+}
+
+function showProgress(show) {
+  const wrap = document.getElementById('progress-wrap');
+  const bar  = document.getElementById('progress-bar');
+  if (show) {
+    wrap.style.display = 'block';
+    bar.style.width = '0%';
+    let w = 0;
+    const iv = setInterval(() => {
+      w = Math.min(w + Math.random() * 15, 90);
+      bar.style.width = w + '%';
+      if (w >= 90) clearInterval(iv);
+    }, 100);
+    wrap._iv = iv;
+  } else {
+    clearInterval(wrap._iv);
+    bar.style.width = '100%';
+    setTimeout(() => { wrap.style.display = 'none'; bar.style.width = '0%'; }, 400);
+  }
+}
+
+// ── Difficulty Analyzer ──
+function analyzeDifficulty(backtracks, steps) {
+  if (backtracks < 20 && steps < 200)  return 'easy';
+  if (backtracks < 200 && steps < 2000) return 'medium';
+  return 'hard';
+}
+
+// ── Algorithm Comparison ──
+async function updateComparison(board, mrvSteps) {
+  const res = await fetch('/compare', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({board})
+  });
+  const data = await res.json();
+  if (data.error) return;
+
+  const plainSteps = data.plain_steps;
+  const max = Math.max(mrvSteps, plainSteps);
+
+  document.getElementById('mrv-count').textContent   = mrvSteps + ' steps';
+  document.getElementById('plain-count').textContent = plainSteps + ' steps';
+
+  setTimeout(() => {
+    document.getElementById('bar-mrv').style.width   = (mrvSteps / max * 100) + '%';
+    document.getElementById('bar-plain').style.width = (plainSteps / max * 100) + '%';
+  }, 100);
+
+  const ratio = Math.round(plainSteps / mrvSteps);
+  document.getElementById('compare-verdict').textContent =
+    `MRV is ${ratio}× more efficient than plain backtracking on this puzzle.`;
+}
+
+// ── Visualize ──
+function loadVizLog(steps) {
+  const log = document.getElementById('viz-log');
+  log.innerHTML = steps.slice(0, 300).map((s, i) =>
+    `<div class="log-${s.action}">[${String(i+1).padStart(4,'0')}] ${s.action === 'place' ? '+ PLACE' : '↩ REVERT'} ${s.val||0} → (${s.row+1},${s.col+1})</div>`
+  ).join('') + (steps.length > 300 ? `<div style="color:rgba(0,255,255,0.2)">... +${steps.length-300} more</div>` : '');
+}
+
+function visualizeSolve() {
+  if (!vizSteps.length) { setStatus('SOLVE FIRST TO ENABLE VISUALIZATION', 'info'); return; }
+  if (playInterval) { clearInterval(playInterval); playInterval = null; document.getElementById('play-btn').textContent = '▶'; }
+  buildGrid(originalBoard);
+  vizIndex = 0;
+  document.getElementById('viz-slider').value = 0;
+  vizGoto(0);
+}
+
+function vizGoto(idx) {
+  idx = parseInt(idx);
+  vizIndex = idx;
+  document.getElementById('viz-slider').value = idx;
+  if (!vizSteps.length) return;
+
+  const snapshot = originalBoard.map(r => [...r]);
+  for (let i = 0; i <= idx && i < vizSteps.length; i++) {
+    const s = vizSteps[i];
+    snapshot[s.row][s.col] = s.val;
+  }
+  const cur = vizSteps[idx] || {};
+  for (let r = 0; r < 9; r++)
+    for (let c = 0; c < 9; c++) {
+      const inp = getCell(r, c);
+      if (!inp || inp.readOnly) continue;
+      inp.value = snapshot[r][c] || '';
+      inp.className = '';
+      if (snapshot[r][c]) {
+        if (cur.row === r && cur.col === c)
+          inp.classList.add(cur.action === 'place' ? 'highlight' : 'backtrack');
+        else inp.classList.add('solved');
+      }
+    }
+  const s = vizSteps[idx];
+  if (s) document.getElementById('viz-step-label').textContent =
+    `STEP ${idx+1}/${vizSteps.length} · ${s.action.toUpperCase()} ${s.val||0} AT ROW ${s.row+1} COL ${s.col+1}`;
+}
+
+function vizPrev() { if (vizIndex > 0) vizGoto(vizIndex - 1); }
+function vizNext() { if (vizIndex < vizSteps.length - 1) vizGoto(vizIndex + 1); }
+
+function togglePlay() {
+  if (playInterval) {
+    clearInterval(playInterval); playInterval = null;
+    document.getElementById('play-btn').textContent = '▶';
+  } else {
+    document.getElementById('play-btn').textContent = '⏸';
+    playInterval = setInterval(() => {
+      if (vizIndex >= vizSteps.length - 1) { togglePlay(); return; }
+      vizGoto(vizIndex + 1);
+    }, 50);
+  }
+}
+
+// ── Generate ──
+async function generatePuzzle() {
+  const diff = document.getElementById('difficulty').value;
+  const res  = await fetch(`/generate?difficulty=${diff}`);
+  const data = await res.json();
+  buildGrid(data.puzzle);
+  setStatus(`NEW ${diff.toUpperCase()} PUZZLE GENERATED`, 'success');
+  resetViz();
+}
+
+// ── Upload ──
+async function uploadFile(input) {
+  const formData = new FormData();
+  formData.append('file', input.files[0]);
+  setStatus('LOADING DATASET...', 'info');
+  const res  = await fetch('/upload', { method: 'POST', body: formData });
+  const data = await res.json();
+  if (data.error) { setStatus(data.error, 'error'); return; }
+  uploadedPuzzles = data.puzzles;
+  setStatus(`${data.count} PUZZLE(S) LOADED FROM FILE`, 'success');
+  const list = document.getElementById('puzzle-list');
+  list.innerHTML = data.puzzles.map((_, i) =>
+    `<li onclick="loadUploadedPuzzle(${i})" id="pz-${i}">▸ PUZZLE_${String(i+1).padStart(3,'0')}.txt</li>`
+  ).join('');
+}
+
+function loadUploadedPuzzle(i) {
+  buildGrid(uploadedPuzzles[i].map(r => [...r]));
+  document.querySelectorAll('#puzzle-list li').forEach(el => el.classList.remove('active'));
+  document.getElementById(`pz-${i}`).classList.add('active');
+  resetViz();
+  setStatus(`PUZZLE ${i+1} LOADED`, 'info');
+}
+
+// ── Utils ──
+function clearBoard() {
+  buildGrid(Array.from({length:9}, () => Array(9).fill(0)));
+  resetViz();
+  document.getElementById('status-bar').innerHTML = '';
+}
+
+function resetViz() {
+  vizSteps = []; vizIndex = 0;
+  document.getElementById('viz-log').innerHTML = '<p style="color:rgba(0,255,255,0.2)">_ solve a puzzle to see the trace</p>';
+  document.getElementById('viz-step-label').textContent = 'NO STEPS LOADED';
+  document.getElementById('viz-slider').max = 0;
+  ['stat-steps','stat-bt','stat-place','stat-time'].forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('stat-diff').textContent = '—';
+  document.getElementById('bar-mrv').style.width = '0%';
+  document.getElementById('bar-plain').style.width = '0%';
+  document.getElementById('mrv-count').textContent = '—';
+  document.getElementById('plain-count').textContent = '—';
+  document.getElementById('compare-verdict').textContent = '';
+}
+
+// ── Solved Banner ──
+function showSolvedBanner(time, steps, bt, diff) {
+  document.getElementById('solved-stats').textContent =
+    `${time}ms · ${steps} steps · ${bt} backtracks · ${diff.toUpperCase()}`;
+  document.getElementById('solved-banner').style.display = 'block';
+}
+function closeBanner() {
+  document.getElementById('solved-banner').style.display = 'none';
+}
+
+// ── Confetti ──
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const colors = ['#00ffff','#00ff88','#ff00ff','#ffff00','#ff4444','#ffffff'];
+  const particles = Array.from({length: 120}, () => ({
+    x: Math.random() * canvas.width,
+    y: -20,
+    r: Math.random() * 6 + 2,
+    d: Math.random() * 4 + 1,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    tilt: Math.random() * 10 - 5,
+    tiltSpeed: Math.random() * 0.1 + 0.05
+  }));
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = p.color;
+      ctx.fill();
+      p.y += p.d;
+      p.x += Math.sin(frame * 0.05) * 1.5;
+      p.tilt += p.tiltSpeed;
+    });
+    frame++;
+    if (frame < 180) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+buildGrid(currentBoard);
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('theme-btn').textContent = isLight ? '⬡ NEON MODE' : '☀ LIGHT MODE';
+}
+</script>
+</body>
+</html>
