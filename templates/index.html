@@ -429,7 +429,7 @@
     body.light .upload-zone:hover { border-color: #4299e1; background: #ebf8ff; }
     body.light .upload-zone p { color: #718096; }
     body.light #puzzle-list li { color: #4a5568; }
-    boy.light #puzzle-list li:hover { background: #ebf8ff; color: #2b6cb0; }
+    body.light #puzzle-list li:hover { background: #ebf8ff; color: #2b6cb0; }
     body.light #puzzle-list li.active { background: #bee3f8; color: #2b6cb0; }
     body.light select { background: white; color: #2d3748; border-color: #cbd5e0; }
     body.light #solved-banner { background: #ffffff; border-color: #bee3f8; box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
@@ -471,6 +471,7 @@
 
     <!-- Visualization -->
    <div id="viz-controls">
+   <div id="viz-step-label" style="margin-top:8px;font-size:11px;color:rgba(0,255,255,0.6)"></div>
         <button class="btn-outline" onclick="vizPrev()" style="padding:6px 12px">‹</button>
         <input type="range" id="viz-slider" min="0" value="0" oninput="vizGoto(this.value)">
         <button class="btn-outline" onclick="vizNext()" style="padding:6px 12px">›</button>
@@ -483,7 +484,7 @@
           <option value="10">3x</option>
         </select>
       </div>
-
+   <div id="viz-log"></div>  
     <!-- Algorithm Comparison -->
     <div class="card" style="margin-top:16px">
       <h2>// Algorithm Comparison</h2>
@@ -739,11 +740,14 @@ function vizGoto(idx) {
         else inp.classList.add('solved');
       }
     }
-  const s = vizSteps[idx];
-  if (s) document.getElementById('viz-step-label').textContent =
+const label = document.getElementById('viz-step-label');
+const s = vizSteps[idx];
+
+if (label && s) {
+  label.textContent =
     `STEP ${idx+1}/${vizSteps.length} · ${s.action.toUpperCase()} ${s.val||0} AT ROW ${s.row+1} COL ${s.col+1}`;
 }
-
+}
 function vizPrev() { if (vizIndex > 0) vizGoto(vizIndex - 1); }
 function vizNext() { if (vizIndex < vizSteps.length - 1) vizGoto(vizIndex + 1); }
 
@@ -817,7 +821,8 @@ function clearBoard() {
 function resetViz() {
   vizSteps = []; vizIndex = 0;
   document.getElementById('viz-log').innerHTML = '<p style="color:rgba(0,255,255,0.2)">_ solve a puzzle to see the trace</p>';
-  document.getElementById('viz-step-label').textContent = 'NO STEPS LOADED';
+  const label = document.getElementById('viz-step-label');
+  if (label) label.textContent = 'NO STEPS LOADED';
   document.getElementById('viz-slider').max = 0;
   ['stat-steps','stat-bt','stat-place','stat-time'].forEach(id => document.getElementById(id).textContent = '—');
   document.getElementById('stat-diff').textContent = '—';
