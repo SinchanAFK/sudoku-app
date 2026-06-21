@@ -429,7 +429,7 @@
     body.light .upload-zone:hover { border-color: #4299e1; background: #ebf8ff; }
     body.light .upload-zone p { color: #718096; }
     body.light #puzzle-list li { color: #4a5568; }
-    body.light #puzzle-list li:hover { background: #ebf8ff; color: #2b6cb0; }
+    boy.light #puzzle-list li:hover { background: #ebf8ff; color: #2b6cb0; }
     body.light #puzzle-list li.active { background: #bee3f8; color: #2b6cb0; }
     body.light select { background: white; color: #2d3748; border-color: #cbd5e0; }
     body.light #solved-banner { background: #ffffff; border-color: #bee3f8; box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
@@ -470,17 +470,19 @@
     </div>
 
     <!-- Visualization -->
-    <div class="card" style="margin-top:16px">
-      <h2>// Algorithm Trace</h2>
-      <div id="viz-log"><p style="color:rgba(0,255,255,0.2)">_ solve a puzzle to see the trace</p></div>
-      <div id="viz-controls">
+   <div id="viz-controls">
         <button class="btn-outline" onclick="vizPrev()" style="padding:6px 12px">‹</button>
         <input type="range" id="viz-slider" min="0" value="0" oninput="vizGoto(this.value)">
         <button class="btn-outline" onclick="vizNext()" style="padding:6px 12px">›</button>
         <button class="btn-primary" id="play-btn" onclick="togglePlay()" style="padding:6px 14px">▶</button>
+        <select id="speed-select" onchange="changeSpeed(this.value)" style="padding:6px 8px;font-size:11px">
+          <option value="200">0.5x</option>
+          <option value="100" selected>1x</option>
+          <option value="60">1.5x</option>
+          <option value="30">2x</option>
+          <option value="10">3x</option>
+        </select>
       </div>
-      <div id="viz-step-label" style="font-size:11px;color:rgba(0,255,255,0.3);margin-top:8px">NO STEPS LOADED</div>
-    </div>
 
     <!-- Algorithm Comparison -->
     <div class="card" style="margin-top:16px">
@@ -745,6 +747,19 @@ function vizGoto(idx) {
 function vizPrev() { if (vizIndex > 0) vizGoto(vizIndex - 1); }
 function vizNext() { if (vizIndex < vizSteps.length - 1) vizGoto(vizIndex + 1); }
 
+let playSpeed = 100;
+
+function changeSpeed(val) {
+  playSpeed = parseInt(val);
+  if (playInterval) {
+    clearInterval(playInterval);
+    playInterval = setInterval(() => {
+      if (vizIndex >= vizSteps.length - 1) { togglePlay(); return; }
+      vizGoto(vizIndex + 1);
+    }, playSpeed);
+  }
+}
+
 function togglePlay() {
   if (playInterval) {
     clearInterval(playInterval); playInterval = null;
@@ -754,7 +769,7 @@ function togglePlay() {
     playInterval = setInterval(() => {
       if (vizIndex >= vizSteps.length - 1) { togglePlay(); return; }
       vizGoto(vizIndex + 1);
-    }, 50);
+    }, playSpeed);
   }
 }
 
