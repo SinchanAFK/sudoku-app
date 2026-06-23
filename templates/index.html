@@ -436,33 +436,56 @@
     body.light #solved-banner h2 { color: #2b6cb0; text-shadow: none; }
     body.light #solved-banner p { color: #718096; }
     body.light #progress-bar { box-shadow: none; }
-    /* Complexity Analysis Table */
+   /* Complexity Analysis Card */
 .complexity-section{
-    margin-top:40px;
-    padding:20px;
+    width: 85%;
+    margin: 50px auto;
+    padding: 25px;
+    background: linear-gradient(135deg,#1e1e2f,#292940);
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
 }
 
 .complexity-section h2{
-    color:white;
     text-align:center;
+    color:#00e5ff;
+    margin-bottom:25px;
+    font-size:32px;
+    text-shadow:0 0 10px #00e5ff;
 }
 
 .complexity-table{
     width:100%;
     border-collapse:collapse;
-    background:#1e1e2f;
-    color:white;
-}
-
-.complexity-table th,
-.complexity-table td{
-    border:1px solid #444;
-    padding:12px;
-    text-align:center;
+    overflow:hidden;
+    border-radius:15px;
 }
 
 .complexity-table th{
-    background:#292940;
+    background:linear-gradient(90deg,#ff512f,#dd2476);
+    color:white;
+    font-size:18px;
+    padding:15px;
+}
+
+.complexity-table td{
+    background:#2f2f48;
+    color:white;
+    padding:15px;
+    text-align:center;
+    font-size:16px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+.complexity-table tr:hover td{
+    background:#404060;
+    transition:0.3s;
+}
+
+.complexity-table tr:last-child td{
+    color:#00ff99;
+    font-weight:bold;
+    font-size:17px;
 }
   </style>
 </head>
