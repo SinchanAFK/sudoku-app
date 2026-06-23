@@ -307,6 +307,44 @@
     .bar-greedy {
      background: linear-gradient(90deg, #a855f7, #ec4899);
      box-shadow: 0 0 8px rgba(200,80,255,0.6);
+    }
+    .chart-box {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 220px;
+  padding: 16px 8px 28px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(0,255,255,0.12);
+}
+
+.chart-item {
+  width: 22%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chart-bar {
+  width: 26px;
+  border-radius: 8px 8px 0 0;
+  margin-top: auto;
+  transition: height 0.8s ease;
+}
+
+.chart-label {
+  font-size: 9px;
+  color: rgba(0,255,255,0.65);
+  text-align: center;
+  margin-top: 8px;
+}
+
+.chart-value {
+  font-size: 10px;
+  color: #00ffff;
+  margin-bottom: 6px;
 }
     /* Upload */
     .upload-zone {
@@ -541,7 +579,7 @@
 <body>
 
 <canvas id="confetti-canvas"></canvas>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <div id="solved-banner">
   <h2>PUZZLE SOLVED</h2>
   <p id="solved-stats"></p>
@@ -587,7 +625,7 @@
    <div id="viz-log"></div>  
     <!-- Algorithm Comparison -->
 <div class="card" style="margin-top:16px">
-  <h2>// Performance Comparison</h2>
+  <h2>// Search Space Analysis</h2>
 
   <p style="font-size:11px;color:rgba(0,255,255,0.4);margin-bottom:12px">
     Comparative analysis of Sudoku solving approaches
@@ -595,10 +633,8 @@
 
   <div style="margin-bottom:12px">
     <select id="compare-metric" onchange="renderAlgorithmComparison()">
-      <option value="time">Time (ms)</option>
-      <option value="calls">Recursive Calls</option>
-      <option value="memory">Memory Usage (KB)</option>
-    </select>
+  <option value="calls" selected>Recursive Calls</option>
+</select>
   </div>
 
   <div id="algorithm-bars"></div>
@@ -620,7 +656,16 @@
         <button class="btn-success" onclick="generatePuzzle()">GENERATE</button>
       </div>
     </div>
+<!-- Graphical Analysis -->
+<div class="card" style="margin-top:16px">
+  <h2>// Graphical Analysis</h2>
 
+  <p style="font-size:11px;color:rgba(0,255,255,0.4);margin-bottom:12px">
+    Recursive Calls Comparison
+  </p>
+
+  <canvas id="performance-chart" height="220"></canvas>
+</div>
     <!-- Upload -->
     <div class="card" style="margin-top:16px">
       <h2>// Upload Dataset</h2>
@@ -644,6 +689,7 @@
       <div class="stat-row"><span>Difficulty</span><span id="stat-diff">—</span></div>
     </div>
   </div>
+ 
 </div>
 
 <script>
@@ -778,10 +824,8 @@ function analyzeDifficulty(backtracks, steps) {
   if (backtracks < 200 && steps < 2000) return 'medium';
   return 'hard';
 }
-
 // ── Algorithm Comparison ──
-// ── Algorithm Comparison ──
-const algorithmData = [
+let algorithmData = [
   { name: "MRV + Backtracking", time: 8, calls: 820, memory: 42, className: "bar-mrv" },
   { name: "Branch and Bound", time: 15, calls: 1560, memory: 48, className: "bar-bnb" },
   { name: "Greedy (LCV) + Backtracking", time: 23, calls: 2890, memory: 44, className: "bar-greedy" },
@@ -798,7 +842,7 @@ function renderAlgorithmComparison() {
 
   container.innerHTML = algorithmData.map(a => {
     const width = (a[metric] / maxValue) * 100;
-    const suffix = metric === "time" ? "ms" : metric === "memory" ? "KB" : "calls";
+    const suffix = "calls";
 
     return `
       <div class="compare-bar-wrap">
@@ -813,12 +857,86 @@ function renderAlgorithmComparison() {
     `;
   }).join("");
 
-  document.getElementById("compare-verdict").textContent =
-    "MRV + Backtracking performs best by reducing unnecessary recursive exploration.";
+ document.getElementById("compare-verdict").textContent =
+  "Performance is evaluated using recursive calls. Fewer recursive calls indicate a smaller search space and higher solving efficiency.";
+renderBarChart();
 }
+async function updateComparison(board, mrvSteps) {
+  const res = await fetch('/compare', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({board})
+  });
 
-function updateComparison() {
+  const data = await res.json();
+
+  if (data.error) {
+    document.getElementById("compare-verdict").textContent = data.error;
+    return;
+  }
+
+  const classMap = {
+    "MRV + Backtracking": "bar-mrv",
+    "Branch and Bound": "bar-bnb",
+    "Greedy (LCV) + Backtracking": "bar-greedy",
+    "Simple Backtracking": "bar-plain"
+  };
+
+  algorithmData = data.algorithms.map(a => ({
+  name: a.name,
+  calls: a.calls,
+  className: classMap[a.name] || "bar-mrv"
+}));
+
   renderAlgorithmComparison();
+}
+let performanceChart = null;
+
+function renderBarChart() {
+  const canvas = document.getElementById("performance-chart");
+  if (!canvas) return;
+
+  const labels = algorithmData.map(a => a.name.replace(" + Backtracking", ""));
+  const calls = algorithmData.map(a => a.calls);
+
+  if (performanceChart) {
+    performanceChart.destroy();
+  }
+
+  performanceChart = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Recursive Calls",
+        data: calls,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: "#00ffff"
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: "#00ffff"
+          }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: "#00ffff"
+          }
+        }
+      }
+    }
+  });
 }
 // ── Visualize ──
 function loadVizLog(steps) {
@@ -1003,6 +1121,7 @@ function toggleTheme() {
   const isLight = document.body.classList.toggle('light');
   document.getElementById('theme-btn').textContent = isLight ? '⬡ NEON MODE' : '☀ LIGHT MODE';
 }
+
 </script>
 <div class="complexity-section">
     <h2>Complexity Analysis (Comparative Study)</h2>
