@@ -436,6 +436,34 @@
     body.light #solved-banner h2 { color: #2b6cb0; text-shadow: none; }
     body.light #solved-banner p { color: #718096; }
     body.light #progress-bar { box-shadow: none; }
+    /* Complexity Analysis Table */
+.complexity-section{
+    margin-top:40px;
+    padding:20px;
+}
+
+.complexity-section h2{
+    color:white;
+    text-align:center;
+}
+
+.complexity-table{
+    width:100%;
+    border-collapse:collapse;
+    background:#1e1e2f;
+    color:white;
+}
+
+.complexity-table th,
+.complexity-table td{
+    border:1px solid #444;
+    padding:12px;
+    text-align:center;
+}
+
+.complexity-table th{
+    background:#292940;
+}
   </style>
 </head>
 <body>
@@ -886,5 +914,41 @@ function toggleTheme() {
   document.getElementById('theme-btn').textContent = isLight ? '⬡ NEON MODE' : '☀ LIGHT MODE';
 }
 </script>
+<!-- Complexity Analysis -->
+<div class="complexity-section">
+    <h2>Complexity Analysis (Comparative Study)</h2>
+
+    <table class="complexity-table">
+        <tr>
+            <th>Algorithm</th>
+            <th>Time Complexity</th>
+            <th>Space Complexity</th>
+        </tr>
+
+        <tr>
+            <td>Simple Backtracking</td>
+            <td>O(9^(n²))</td>
+            <td>O(n²)</td>
+        </tr>
+
+        <tr>
+            <td>Greedy (LCV) + Backtracking</td>
+            <td>O(9^(n²)) (Better Avg.)</td>
+            <td>O(n²)</td>
+        </tr>
+
+        <tr>
+            <td>Branch and Bound</td>
+            <td>O(9^(n²)) (Pruning)</td>
+            <td>O(n²)</td>
+        </tr>
+
+        <tr>
+            <td><b>MRV + Backtracking</b></td>
+            <td><b>O(9^(n²)) (Best Avg.)</b></td>
+            <td><b>O(n²)</b></td>
+        </tr>
+    </table>
+</div>
 </body>
 </html>
