@@ -83,7 +83,12 @@
     }
 
     /* Grid */
-    table { border-collapse: collapse; margin: 12px auto; display: block; width: fit-content; }
+   #sudoku-table {
+  border-collapse: collapse;
+  margin: 12px auto;
+  display: block;
+  width: fit-content;
+}
     td { width: 54px; height: 54px; text-align: center; }
 
     td input {
@@ -446,7 +451,7 @@
     box-shadow: 0 8px 25px rgba(0,0,0,0.4);
     text-align: center; /* Centers the heading */
 }
-<!-- SINCHAN TEST -->
+
 .complexity-section h2 {
     text-align: center;
     color: #00e5ff;
@@ -465,11 +470,10 @@
 
 .complexity-table {
     width: 100%;
-    max-width: 800px;
+    max-width: 1000px;
+    margin: 0 auto;
     border-collapse: collapse;
-    overflow: hidden;
-    border-radius: 15px;
-    margin: 0 auto; /* Center the table */
+    display: table;
 }
 
 .complexity-table th {
@@ -990,23 +994,23 @@ function toggleTheme() {
             <tbody>
                 <tr>
                     <td>Simple Backtracking</td>
-                    <td>\( O(9^{n^2}) \)</td>
-                    <td>\( O(n^2) \)</td>
+                    <td>O(9^(n²))</td>
+                    <td>O(n²)</td>
                 </tr>
                 <tr>
                     <td>Greedy (LCV) + Backtracking</td>
-                    <td>\( O(9^{n^2}) \) (Better Avg.)</td>
-                    <td>\( O(n^2) \)</td>
+                    <td>O(9^(n²)) (Better Avg.)</td>
+                    <td>O(n²)</td>
                 </tr>
                 <tr>
                     <td>Branch and Bound</td>
-                    <td>\( O(9^{n^2}) \) (Pruning)</td>
-                    <td>\( O(n^2) \)</td>
+                    <td>O(9^(n²)) (Pruning)</td>
+                    <td>O(n²)</td>
                 </tr>
                 <tr>
                     <td>MRV + Backtracking</td>
-                    <td>\( O(9^{n^2}) \) (Best Avg.)</td>
-                    <td>\( O(n^2) \)</td>
+                    <td>O(9^(n²))(Best Avg.)</td>
+                    <td>O(n²)</td>
                 </tr>
             </tbody>
         </table>
