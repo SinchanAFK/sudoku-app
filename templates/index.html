@@ -780,45 +780,19 @@ function analyzeDifficulty(backtracks, steps) {
 }
 
 // ── Algorithm Comparison ──
-async function updateComparison(board, mrvSteps) {
-  const algorithmData = [
-  {
-    name: "MRV + Backtracking",
-    time: 8,
-    calls: 820,
-    memory: 42,
-    rank: "Best",
-    className: "bar-mrv"
-  },
-  {
-    name: "Branch and Bound",
-    time: 15,
-    calls: 1560,
-    memory: 48,
-    rank: "Second",
-    className: "bar-bnb"
-  },
-  {
-    name: "Greedy (LCV) + Backtracking",
-    time: 23,
-    calls: 2890,
-    memory: 44,
-    rank: "Third",
-    className: "bar-greedy"
-  },
-  {
-    name: "Simple Backtracking",
-    time: 68,
-    calls: 9840,
-    memory: 38,
-    rank: "Slowest",
-    className: "bar-plain"
-  }
+// ── Algorithm Comparison ──
+const algorithmData = [
+  { name: "MRV + Backtracking", time: 8, calls: 820, memory: 42, className: "bar-mrv" },
+  { name: "Branch and Bound", time: 15, calls: 1560, memory: 48, className: "bar-bnb" },
+  { name: "Greedy (LCV) + Backtracking", time: 23, calls: 2890, memory: 44, className: "bar-greedy" },
+  { name: "Simple Backtracking", time: 68, calls: 9840, memory: 38, className: "bar-plain" }
 ];
 
 function renderAlgorithmComparison() {
   const metric = document.getElementById("compare-metric").value;
   const container = document.getElementById("algorithm-bars");
+
+  if (!container) return;
 
   const maxValue = Math.max(...algorithmData.map(a => a[metric]));
 
@@ -843,7 +817,7 @@ function renderAlgorithmComparison() {
     "MRV + Backtracking performs best by reducing unnecessary recursive exploration.";
 }
 
-async function updateComparison(board, mrvSteps) {
+function updateComparison() {
   renderAlgorithmComparison();
 }
 // ── Visualize ──
@@ -973,10 +947,6 @@ function resetViz() {
   document.getElementById('viz-slider').max = 0;
   ['stat-steps','stat-bt','stat-place','stat-time'].forEach(id => document.getElementById(id).textContent = '—');
   document.getElementById('stat-diff').textContent = '—';
-  document.getElementById('bar-mrv').style.width = '0%';
-  document.getElementById('bar-plain').style.width = '0%';
-  document.getElementById('mrv-count').textContent = '—';
-  document.getElementById('plain-count').textContent = '—';
   document.getElementById('compare-verdict').textContent = '';
 }
 
