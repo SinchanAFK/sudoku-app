@@ -825,12 +825,7 @@ function analyzeDifficulty(backtracks, steps) {
   return 'hard';
 }
 // ── Algorithm Comparison ──
-let algorithmData = [
-  { name: "MRV + Backtracking", time: 8, calls: 820, memory: 42, className: "bar-mrv" },
-  { name: "Branch and Bound", time: 15, calls: 1560, memory: 48, className: "bar-bnb" },
-  { name: "Greedy (LCV) + Backtracking", time: 23, calls: 2890, memory: 44, className: "bar-greedy" },
-  { name: "Simple Backtracking", time: 68, calls: 9840, memory: 38, className: "bar-plain" }
-];
+let algorithmData = [];
 
 function renderAlgorithmComparison() {
   const metric = document.getElementById("compare-metric").value;
@@ -895,7 +890,17 @@ let performanceChart = null;
 function renderBarChart() {
   const canvas = document.getElementById("performance-chart");
   if (!canvas) return;
+  if (!algorithmData.length) {
+    const ctx = canvas.getContext("2d");
 
+    if (performanceChart) {
+      performanceChart.destroy();
+      performanceChart = null;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
   const labels = algorithmData.map(a => a.name.replace(" + Backtracking", ""));
   const calls = algorithmData.map(a => a.calls);
 
@@ -1066,6 +1071,8 @@ function resetViz() {
   ['stat-steps','stat-bt','stat-place','stat-time'].forEach(id => document.getElementById(id).textContent = '—');
   document.getElementById('stat-diff').textContent = '—';
   document.getElementById('compare-verdict').textContent = '';
+  algorithmData = [];
+  renderBarChart();
 }
 
 // ── Solved Banner ──
