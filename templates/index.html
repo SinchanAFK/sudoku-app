@@ -436,7 +436,6 @@
     body.light #solved-banner h2 { color: #2b6cb0; text-shadow: none; }
     body.light #solved-banner p { color: #718096; }
     body.light #progress-bar { box-shadow: none; }
-/* Container */
 .complexity-section {
     width: 85%;
     max-width: 1000px;
@@ -445,11 +444,9 @@
     background: linear-gradient(135deg, #1e1e2f, #292940);
     border-radius: 20px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-    display: block;
-    text-align: center; /* Center the heading and content */
+    text-align: center; /* Centers the heading */
 }
 
-/* Heading */
 .complexity-section h2 {
     text-align: center;
     color: #00e5ff;
@@ -458,48 +455,58 @@
     text-shadow: 0 0 10px #00e5ff;
 }
 
-/* Table */
+/* Table Container - This is the key fix! */
+.complexity-table-wrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    overflow-x: auto; /* For mobile responsiveness */
+}
+
 .complexity-table {
     width: 100%;
-    max-width: 800px; /* Limit table width */
+    max-width: 800px;
     border-collapse: collapse;
     overflow: hidden;
     border-radius: 15px;
-    margin: 0 auto; /* This centers the table */
+    margin: 0 auto; /* Center the table */
 }
 
-/* Table Headers */
 .complexity-table th {
     background: linear-gradient(90deg, #ff512f, #dd2476);
     color: white;
     font-size: 18px;
     padding: 15px;
+    text-align: center; /* Center header text */
 }
 
-/* Table Cells */
 .complexity-table td {
     background: #2f2f48;
     color: white;
     padding: 15px;
-    text-align: center;
+    text-align: center; /* Center cell text - THIS IS THE FIX */
     font-size: 16px;
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-/* Hover Effect */
 .complexity-table tr:hover td {
     background: #404060;
     transition: 0.3s;
 }
 
-/* Last Row */
 .complexity-table tr:last-child td {
     color: #00ff99;
     font-weight: bold;
     font-size: 17px;
 }
 
-/* Responsive */
+/* Make MathJax content center too */
+.complexity-table td .math {
+    display: inline-block;
+    text-align: center;
+}
+
+/* Mobile Responsive */
 @media (max-width: 768px) {
     .complexity-section {
         width: 95%;
@@ -512,6 +519,9 @@
     .complexity-table td {
         padding: 10px;
         font-size: 14px;
+    }
+    .complexity-table {
+        font-size: 13px;
     }
 }
   </style>
@@ -964,41 +974,43 @@ function toggleTheme() {
   document.getElementById('theme-btn').textContent = isLight ? '⬡ NEON MODE' : '☀ LIGHT MODE';
 }
 </script>
-<!-- Complexity Analysis -->
 <div class="complexity-section">
     <h2>Complexity Analysis (Comparative Study)</h2>
-
-    <table class="complexity-table">
-        <tr>
-            <th>Algorithm</th>
-            <th>Time Complexity</th>
-            <th>Space Complexity</th>
-        </tr>
-
-        <tr>
-            <td>Simple Backtracking</td>
-            <td>O(9^(n²))</td>
-            <td>O(n²)</td>
-        </tr>
-
-        <tr>
-            <td>Greedy (LCV) + Backtracking</td>
-            <td>O(9^(n²)) (Better Avg.)</td>
-            <td>O(n²)</td>
-        </tr>
-
-        <tr>
-            <td>Branch and Bound</td>
-            <td>O(9^(n²)) (Pruning)</td>
-            <td>O(n²)</td>
-        </tr>
-
-        <tr>
-            <td><b>MRV + Backtracking</b></td>
-            <td><b>O(9^(n²)) (Best Avg.)</b></td>
-            <td><b>O(n²)</b></td>
-        </tr>
-    </table>
+    
+    <!-- Add this wrapper div -->
+    <div class="complexity-table-wrapper">
+        <table class="complexity-table">
+            <thead>
+                <tr>
+                    <th>Algorithm</th>
+                    <th>Time Complexity</th>
+                    <th>Space Complexity</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Simple Backtracking</td>
+                    <td>\( O(9^{n^2}) \)</td>
+                    <td>\( O(n^2) \)</td>
+                </tr>
+                <tr>
+                    <td>Greedy (LCV) + Backtracking</td>
+                    <td>\( O(9^{n^2}) \) (Better Avg.)</td>
+                    <td>\( O(n^2) \)</td>
+                </tr>
+                <tr>
+                    <td>Branch and Bound</td>
+                    <td>\( O(9^{n^2}) \) (Pruning)</td>
+                    <td>\( O(n^2) \)</td>
+                </tr>
+                <tr>
+                    <td>MRV + Backtracking</td>
+                    <td>\( O(9^{n^2}) \) (Best Avg.)</td>
+                    <td>\( O(n^2) \)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 </body>
 </html>
