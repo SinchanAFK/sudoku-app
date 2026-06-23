@@ -178,7 +178,7 @@ def compare():
 
         return False
 
-    def benchmark(name, solver_func, runs=10):
+    def benchmark(name, solver_func, runs=1):
         total_time = 0
         total_calls = 0
         solved = False
